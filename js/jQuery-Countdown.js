@@ -31,32 +31,31 @@ var Countdown = function(ele, userOptions){
     };
 
     this.setFormat = function(data){
-        var formatedDate = "";
+        var formatedDate = [];
         var format = this.options.format.split(":");
         for(var i =0;i<format.length;i++){
             switch(format[i].toLowerCase()){
                 case "dd":
-                    formatedDate += data.Day < 10 ? '0'+data.Day:data.Day;
-                    formatedDate += ":";
+                    formatedDate.push(data.Day < 10 ? '0'+data.Day:data.Day);
+                   
                     break;
                 case "hh":
-                    formatedDate += data.Hour < 10 ? '0' + data.Hour : data.Hour;
-                    formatedDate += ":";
+                    formatedDate.push(data.Hour < 10 ? '0' + data.Hour : data.Hour);
+
                     break;
                 case "mm":
-                    formatedDate += data.Min < 10 ? '0' + data.Min : data.Min;
-                    formatedDate += ":";
+                    formatedDate.push(data.Min < 10 ? '0' + data.Min : data.Min);
+
                     break;
                 case "ss":
-                    formatedDate += data.Sec < 10 ? '0' + data.Sec : data.Sec;
+                    formatedDate.push(data.Sec < 10 ? '0' + data.Sec : data.Sec);
                     break;
                 default:
                     break;
             }
         }
-        formatedDate.replace("/\:+$/","");
-        console.log(formatedDate);
-        return formatedDate;
+       
+        return formatedDate.join(":");
     };
 
     this.getDiffDate = function(){
