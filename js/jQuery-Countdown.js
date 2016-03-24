@@ -1,31 +1,34 @@
-var NAME = 'Countdown';
-var DATA_ATTR = 'date';
+// var NAME = 'Countdown';
+// var DATA_ATTR = 'date';
 var Countdown = function(ele, userOptions){
-    var defaultOptions={
-        format: "dd:hh:mm:ss", //dd:hh:mm or hh:mm:ss
-        endTime: "2016/12/24 23:59:59",  //any valid format that new Date() can accept
-        step: 1000 //in million second
-    };
     this.ele = ele;
-    this.interval = false;
     this.options = {};
-    
-    this.options = userOptions ? userOptions : defaultOptions;
+    this.userOptions = userOptions;
+    this.interval = false;
     this.started = false;
-    // merge default options and options into this.options
-    for(var obj in defaultOptions){
-        if(defaultOptions.hasOwnProperty(obj)){
-            this.options[obj] = (typeof this.options[obj] !== 'undefined') ? this.options[obj]:defaultOptions[obj];
-            if(obj === 'endTime' && typeof(this.options.endTime) !== 'object'){
-                this.options.endTime = new Date(this.options.endTime);
+    this.init = function(){
+        var defaultOptions={
+            format: "dd:hh:mm:ss", //dd:hh:mm or hh:mm:ss
+            endTime: "2016/12/24 23:59:59",  //any valid format that new Date() can accept
+            step: 1000 //in million second
+        };
+        // merge default options and options into this.options
+        //fill the options value with defaul ones if it is not given in userOptions
+        for(var obj in defaultOptions){
+            if(defaultOptions.hasOwnProperty(obj)){
+                this.options[obj] = (typeof this.userOptions[obj] !== 'undefined') ? this.userOptions[obj]:defaultOptions[obj];
+                if(obj === 'endTime' && typeof(this.options.endTime) !== 'object'){
+                    this.options.endTime = new Date(this.options.endTime);
+                }
+                if(typeof this.options[obj] ==="function"){
+                    this.options[obj] = this.options[obj].bind(this);
+                }
             }
-
-            if(typeof this.options[obj] ==="function"){
-                this.options[obj] = this.options[obj].bind(this);
-            }
+            //console.log(this.options);
         }
-    }
-
+        this.diff = (new Date(this.options.endTime) - Date.now())/1000; //get the difference time in seconds 
+        this.update();
+    };
 
     this.setFormat = function(data){
         var formatedDate = "";
@@ -51,7 +54,8 @@ var Countdown = function(ele, userOptions){
                     break;
             }
         }
-        //console.log(formatedDate);
+        formatedDate.replace("/\:+$/","");
+        console.log(formatedDate);
         return formatedDate;
     };
 
@@ -62,66 +66,57 @@ var Countdown = function(ele, userOptions){
             Min: 0,
             Sec: 0
         };
-
-        var diff = (new Date(this.options.endTime) - Date.now())/1000;  //diff time in seconds
-        if(diff <= 0 ){
+        if(this.diff === 0 ){
             if(this.interval){
-                this.started = false;
                 this.stop();
-                // this.options.onEnd();
             }
             return this.setFormat(diffData);
         }
 
-        diffData.Day = Math.floor(diff / 86400);
-        diffData.Hour = Math.floor((diff % 86400) / 3600);
-        diffData.Min = Math.floor((diff % 3600) / 60);
-        diffData.Sec = Math.floor((diff % 3600) % 60);
-        console.log(diffData);
-        var diffDate = this.setFormat(diffData);
-        return diffDate;
+        diffData.Day = Math.floor(this.diff / 86400);
+        diffData.Hour = Math.floor((this.diff % 86400) / 3600);
+        diffData.Min = Math.floor((this.diff % 3600) / 60);
+        diffData.Sec = Math.floor((this.diff % 3600) % 60);
+        this.diff --;
+
+        return this.setFormat(diffData);
     };
    
     this.update = function(){
         if(this.interval){
-            window.clearInterval(this.interval);
+            window.clearTimeout(this.interval);
             //return;
         }
-        //this.started = true;
-        //this.update(this.getDiffDate());
-        
-            this.interval = window.setInterval(this.update, 1000);
-        
-        //console.log(this.diffTime);
-        //return this;
+        if(this.options.step){
+            this.interval = window.setTimeout(this.update, this.options.step);
+        }else{
+            this.interval = window.setTimeout(this.update, 1000);
+        }    
         this.ele.innerHTML = this.getDiffDate();
     }.bind(this);
 
     this.stop = function(){
         if(this.interval){
-            window.clearInterval(this.interval);
+            window.clearTimeout(this.interval);
             this.interval = false;
         }
         return this;
     }.bind(this);
 
-    // this.update = function(date){
-    //     this.ele.innerHTML = date;
-    // };
-
-    this.update();
+    this.init();
 };
 
 
 jQuery.fn.Countdown = function(options) {
   return $.each(this, function(i, el) {
     var $el = $(el);
-    if (!$el.data(NAME)) {
-      // allow setting the date via the data-date attribute
-      if ($el.data(DATA_ATTR)) {
-        options.date = $el.data(DATA_ATTR);
-      }
-      $el.data(NAME, new Countdown(el, options));
-    }
+    $el.data(new Countdown(el, options));
+    // if (!$el.data(NAME)) {
+    //   // allow setting the date via the data-date attribute
+    //   if ($el.data(DATA_ATTR)) {
+    //     options.date = $el.data(DATA_ATTR);
+    //   }
+      
+    // }
   });
 };
